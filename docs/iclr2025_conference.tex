@@ -1,0 +1,674 @@
+\documentclass{article} % For LaTeX2e
+\usepackage{iclr2025_conference,times}
+
+% Optional math commands from https://github.com/goodfeli/dlbook_notation.
+\input{math_commands.tex}
+
+% \usepackage{hyperref}
+\usepackage{url}
+
+
+
+\usepackage[utf8]{inputenc}         %
+\usepackage[T1]{fontenc}            %
+\usepackage{url}                    %
+\usepackage{booktabs}               %
+\usepackage{amsfonts}               %
+\usepackage{nicefrac}               %
+\usepackage{microtype}              %
+\usepackage{xcolor}                 %
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage[flushleft]{threeparttable}
+\usepackage{float}
+\usepackage{multirow}
+\usepackage{xspace}
+\usepackage{natbib}
+\usepackage{enumitem}
+\usepackage[font=small]{caption}
+\usepackage{autobreak}
+\usepackage{sidecap}
+\usepackage{wrapfig}
+\usepackage{bbding}
+\usepackage[toc, page, header]{appendix}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{pifont}
+\usepackage{mdframed}
+\usepackage{colortbl}
+\usepackage{mathrsfs}
+\usepackage[textwidth=3.4cm,textsize=tiny]{todonotes}
+% \usepackage{booktabs}
+\usepackage{longtable}
+
+\usepackage[colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue]{hyperref}
+
+
+\newcommand{\kang}[1]{\todo[color=yellow!20,size=\footnotesize,caption={}]{K: #1}{}}
+\newcommand{\ikang}[1]{\todo[inline,color=yellow!20,size=\footnotesize,caption={}]{K: #1}{}}
+
+\newcommand{\tao}[1]{\todo[color=blue!20,size=\footnotesize,caption={}]{T: #1}{}}
+\newcommand{\itao}[1]{\todo[inline,color=blue!20,size=\footnotesize,caption={}]{T: #1}{}}
+
+\newcommand{\bu}[1]{\todo[color=green!20,size=\footnotesize,caption={}]{S: #1}{}}
+\newcommand{\ibu}[1]{\todo[inline,color=green!20,size=\footnotesize,caption={}]{S: #1}{}}
+
+\newcommand{\greentext}[1]{\textcolor{green!50!black}{#1}}
+\newcommand{\orangetext}[1]{\textcolor{orange!75!black}{#1}}
+\newcommand{\purpletext}[1]{\textcolor{purple!75!black}{#1}}
+\newcommand{\bluetext}[1]{\textcolor{blue!50!black}{#1}}
+\newcommand{\redtext}[1]{\textcolor{red!75!black}{#1}}
+
+\title{Clustering the automotive}
+
+% Authors must not appear in the submitted version. They should be hidden
+% as long as the \iclrfinalcopy macro remains commented out below.
+% Non-anonymous submissions will be rejected without review.
+
+% \author{Antiquus S.~Hippocampus, Natalia Cerebro \& Amelie P. Amygdale \thanks{ Use footnote for providing further information
+% about author (webpage, alternative address)---\emph{not} for acknowledging
+% funding agencies.  Funding acknowledgements go at the end of the paper.} \\
+% Department of Computer Science\\
+% Cranberry-Lemon University\\
+% Pittsburgh, PA 15213, USA \\
+% \texttt{\{hippo,brain,jen\}@cs.cranberry-lemon.edu} \\
+% \And
+% Ji Q. Ren \& Yevgeny LeNet \\
+% Department of Computational Neuroscience \\
+% University of the Witwatersrand \\
+% Joburg, South Africa \\
+% \texttt{\{robot,net\}@wits.ac.za} \\
+% \AND
+% Coauthor \\
+% Affiliation \\
+% Address \\
+% \texttt{email}
+% }
+
+\author{Runkang Yang\thanks{Project Leader.}, Panxin Tao\thanks{Equal contribution.}, Zhuoyang Bu\footnotemark[2]\\
+\texttt{\{yangrk2022,taopx2022,buzy2022\}@shanghaitech.edu.cn}}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to \LaTeX{} to determine where to break
+% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
+% puts 3 of 4 authors names on the first line, and the last on the second
+% line, try using \AND instead of \And before the third author name.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\iclrfinalcopy % Uncomment for camera-ready version, but NOT for submission.
+\begin{document}
+
+
+\maketitle
+
+
+\begin{abstract}
+   Clustering analysis plays a pivotal role in identifying patterns within complex datasets and can be particularly valuable for competitor analysis in automotive industry, 
+   This study addresses the challenge of identifying competing vehicles for Volkswagen.
+   We first conduct Principal Component Analysis (PCA) and AutoEncoder for dimensionality reduction, followed by K-means and hierarchical clustering for product segmentation. 
+   Through qualitative analysis and quantitative comparison, we empirically find that \textit{the combination of AE for feature extraction and HC for clustering appears to be the most effective approach}. It not only achieves the \purpletext{best clustering evaluation metrics} but also results in a logical grouping of vehicles that reflects market segmentation.
+   % We emphasizes the advantages of AutoEncoder-based dimensionality reduction, particularly in its ability to handle high-dimensional data and preserve critical feature relationships than traditional methods. 
+   This research not only advances the application of clustering methods in automotive sales industry but also illustrates the potential of deep learning techniques used in high-dimensional data spaces.
+\end{abstract}
+
+
+\begin{figure}[!ht]
+   \centering
+   \begin{subfigure}{.49\textwidth}
+       \centering
+       \includegraphics[width=1.0\linewidth]{./figures/PCA.pdf}
+       \vspace{-5pt}
+       \label{fig:sketch1}
+   \end{subfigure}
+   \hfill
+   \begin{subfigure}{.49\textwidth}
+       \centering
+       \includegraphics[width=1.0\linewidth]{./figures/AE.pdf}
+       \vspace{-5pt}
+       \label{fig:sketch2}
+   \end{subfigure}
+   \caption{\textbf{Traditional PCA-based dimensionality reduction (left) and neural network-based autoencoder dimensionality reduction (right).} Traditional PCA/FA relies on linear transformations, which inherently possess limitations in capturing nonlinear patterns in data. In contrast, neural network-based autoencoders leverage nonlinearity and hierarchical feature extraction, enabling them to handle complex data distributions effectively, thus contributes to downstream clustering tasks.}
+   \label{fig:sketch}
+   \vspace{-12pt}
+\end{figure}
+
+
+\section{Introduction}
+
+Clustering analysis is a widely used technique for identifying patterns in large and complex datasets, making it particularly useful in fields such as market segmentation, product grouping, and competitor analysis.
+In the automotive industry, clustering can be an invaluable tool for identifying groups of similar vehicles, which can inform product positioning, pricing strategies, and competitive analysis.
+
+To perform effective clustering, it is crucial to reduce the dimensionality of the data while preserving its key structure.
+Traditional methods, such as Principal Component Analysis (PCA), have long been used for this purpose by transforming the original feature space into a set of uncorrelated components that capture the most significant variance in the data~\citep{pearson1901pca,hotelling1933pca}.
+However, PCA often struggles to capture non-linear relationships, which are prevalent in real-world datasets like automotive data in this problem.
+
+To address these limitations, more recent methods have leveraged deep learning techniques, particularly AutoEncoders (AE), for dimensionality reduction.
+AutoEncoders are neural network-based models that learn a compressed representation of the input data in a lower-dimensional space, capable of preserving complex, non-linear patterns~\citep{hinton2006autoencoder,goodfellow2016deep}.
+By reducing the dimensionality of the data using AutoEncoders, we can extract more meaningful representations that can improve the performance of clustering algorithms.
+
+After dimensionality reduction, clustering algorithms such as K-means~\citep{macqueen1967kmeans,jain2010kmeans} and hierarchical clustering~\citep{lance1967hierarchical,murtagh2012hierarchical} are commonly used to group vehicles based on their feature similarities.
+K-means is a well-known clustering algorithm that works efficiently on large datasets and produces a predefined number of clusters based on the Euclidean distance between points.
+However, K-means requires the number of clusters to be specified in advance and may struggle to detect clusters with non-spherical shapes. Hierarchical clustering, on the other hand, builds a tree of clusters and provides a more flexible approach to identifying relationships between data points.
+After that, we quantitatively evaluate the clustering quality through internal metrics like the Silhouette Score(SC)~\citep{rousseeuw1987silhouettes}, Calinski-Harabasz Index(CH)~\citep{calinski1974dendrite}, Davies-Bouldin Index(DB)~\citep{davies1979cluster} and Dunn Index(DI)~\citep{dunn1974well}.
+
+This paper aims to investigate the effectiveness of combining AutoEncoder-based dimensionality reduction with clustering methods for automotive competitor analysis.
+Specifically, We detailed our methodology in~\autoref{sec:methodology}, mainly through comparing \orangetext{PCA} and \orangetext{AutoEncoder} for dimensionality reduction, followed by clustering with \orangetext{K-means} and \orangetext{hierarchical} methods.
+And then present the numerical result in~\autoref{sec:numerical}, the conclusion in~\autoref{sec:conclusion}.
+
+\section{Methodology}
+\label{sec:methodology}
+
+This section details the methodology employed for the analysis of the automotive dataset.
+The approach includes data preprocessing, feature selection, and training of clustering models using two dimensionality reduction techniques: Principal Component Analysis (PCA) and AutoEncoders (AE).
+Two clustering algorithms, K-means and hierarchical clustering, are then applied to identify competitor vehicles for Volkswagen, as shown in Figure~\ref{fig:sketch}, \ref{fig:pipeline}.
+
+\subsection{Feature Engineering}
+
+
+The first step involves preprocessing the dataset to ensure that it is ready for dimensionality reduction and clustering. This includes handling missing values, detecting and treating outliers, normalizing numerical data, and converting categorical variables into a format suitable for machine learning models.
+
+The dataset has no missing value and except for the Car\_ID attribute which is only an index, we will divide the remaining attributes into two kind: categorical attributes and numerical attributes and handle them respectively.
+
+\subsubsection{Data Cleaning}
+This step involves correcting any errors present in the dataset, such as incorrect entries in categorical fields (e.g., misspelled car names or incorrect labels).
+These issues were manually inspected and corrected by cross-referencing with external sources.
+And in this problem, there is a typo in line 184 where \textit{vokswagen} refers to \textit{volkswagen}, and \textit{vw} is short for \textit{volkswagen}, we have manually identified and corrected them.
+
+\subsubsection{One-hot Encoding of Categorical Variables}
+
+In this section, we will handle the $10$ categorical attributes to fit them into the subsequent models.
+
+First of all, we notice that the attributes doornumber and cylindernumber are expressed as number. We argue that the cylindernumber attribute has numerical significance and can be treated as a numerical attribute. On the other hand, the value of doornumber barely matters the choice of competitors, which should be treated as a categorical attribute.
+
+We also notice that the CarName attribute has 147 different categories which is quite large and contains little useful information. Therefore, it will be extracted and handled as categorical attribute CarBrand subsequently. We observed misspelled or abbreviated categories in CarName, which should be corrected when extracting the CarBrand attribute.
+
+After the data cleaning, one-hot encoding is applied to all the categorical attributes. We use one-hot encoding instead of label encoding because all the attributes have no ordinal relation.
+% Categorical variables, such as \textit{fueltype} or \textit{carbody}, were transformed into a one-hot encoded representation. 
+For a categorical variable \( C \) with \( N \) possible categories, each category was encoded as a binary vector.
+For instance, if \( C = \{ \text{convertible}, \text{hatchback}, \text{sedan} \} \), the one-hot encoding would convert these categories into the following binary vectors:
+$$
+\text{convertible} = [1, 0, 0], \quad \text{hatchback} = [0, 1, 0], \quad \text{sedan} = [0, 0, 1]
+$$
+
+\subsubsection{Outlier Detection and Handling}
+The remaining 15 numerical attributes and the cylindernumber attribute mentioned before are treated as numerical features.
+Outliers in numerical features can significantly distort the analysis and modeling results. To detect and handle outliers, we utilized the z-score method, as shown in~\autoref{fig:Boxplot}. For a given numerical feature \( x_i \), the z-score is defined as:
+$
+z_i = \frac{x_i - \mu}{\sigma}
+$
+where \( \mu \) is the mean and \( \sigma \) is the standard deviation of the feature. Any data point with a z-score greater than 3 or less than -3 was considered an outlier and replaced by the median value of the corresponding feature \( \tilde{x} \):
+$
+x_i \leftarrow \tilde{x}
+$
+
+ \begin{figure}[t]
+    \centering
+    % \includegraphics[width=1.0\linewidth]{resources/figures/strategy.pdf}
+    \begin{subfigure}{.49\textwidth}  % Adjust width to fit within the line
+        \centering
+        % \framebox[\linewidth][c]{\phantom{\rule{0pt}{0.918\linewidth}}}
+        \includegraphics[width=1.0\linewidth]{./figures/data1.png}
+        % \captionsetup{labelformat=empty,skip=-8pt}
+        % \caption{Comparison \SA and \SB.}
+        \label{fig:distribution}
+        \vspace{-5pt}
+    \end{subfigure}
+    \hfill % Ensures that the subfigures are evenly spaced or fill the space
+    \begin{subfigure}{.49\textwidth}
+        \centering
+        % \framebox[\linewidth][c]{\phantom{\rule{0pt}{0.918\linewidth}}}
+        \includegraphics[width=1.0\linewidth]{./figures/data2.png}
+        % \captionsetup{labelformat=empty,skip=-8pt}
+        % \caption{Early-stage Training in \SB.}
+        \label{fig:boxplot}
+        \vspace{-5pt}
+    \end{subfigure}
+    \caption{Data distribution and boxplot.}
+    \label{fig:Boxplot}
+    \vspace{-12pt}
+ \end{figure}
+ 
+
+
+
+\subsubsection{Normalization of Numerical Features}
+To eliminate the influence of different scales in numerical features, all numerical attributes were standardized.
+Since we notice quite a number of the numerical attributes in this dataset barely follow a normal distribution, MinMaxScalar is favored instead of StandardScalar.
+Actually, a much better performance with minmaxscalar is observed in subsequent result.
+This transformation helps reserve the distribution and relative distance of the origin data and ensures that the numerical attributes are within [0,1].
+The {MinMaxScaler} transformation is defined as:
+\[
+    x' = \frac{x - x_{\min}}{x_{\max} - x_{\min}},
+\]
+where $x_{\min}$ and $x_{\max}$ are the minimum and maximum values of the attribute, respectively. This transformation maps all values of $x$ to the range $[0, 1]$.
+
+\subsection{Feature Selection}
+After preprocessing, the next step is to identify the most relevant features for clustering. We begin by visualizing the correlation between numerical features using a heatmap, where the correlation coefficient \( r \) between two features \( x_i \) and \( x_j \) is computed as:
+$$
+r(x_i, x_j) = \frac{\text{cov}(x_i, x_j)}{\sigma_{x_i} \sigma_{x_j}}
+$$
+where \( \text{cov}(x_i, x_j) \) is the covariance of the features and \( \sigma_{x_i} \) and \( \sigma_{x_j} \) are their respective standard deviations.
+Features with high correlation (\( |r| > 0.85 \)) were considered redundant and removed.
+
+
+
+
+\subsubsection{Dimensionality Reduction}
+We applied two methods for dimensionality reduction: Principal Component Analysis (PCA) and AutoEncoders (AE). Both methods aim to reduce the number of features while retaining as much variance (PCA) or meaningful information (AE) as possible.
+
+\subsubsection{Principal Component Analysis (PCA)}
+PCA~\citep{pearson1901pca,hotelling1933pca} is a linear dimensionality reduction technique that projects the data into a new space such that the first principal component captures the maximum variance in the data, the second principal component captures the second largest variance, and so on. Mathematically, PCA involves solving the eigenvalue problem for the covariance matrix \( \mathbf{C} \) of the dataset:
+$$
+\mathbf{C} \mathbf{v}_i = \lambda_i \mathbf{v}_i
+$$
+where \( \lambda_i \) are the eigenvalues and \( \mathbf{v}_i \) are the eigenvectors. 
+We selected the number of principal components such that the cumulative explained variance was 95\%.
+This resulted in approximately 18 principal components for our dataset, which were used for further analysis.
+
+\subsubsection{AutoEncoder (AE)}
+AutoEncoders~\citep{hinton2006autoencoder,goodfellow2016deep} are a class of artificial neural networks that aim to learn a compressed, low-dimensional representation of the input data. The AE consists of an encoder network that maps the input data \( x \) to a lower-dimensional space \( z \), and a decoder network that reconstructs the original data from this lower-dimensional representation. The objective of training an AE is to minimize the reconstruction error:
+$$
+\mathcal{L}(\hat{x}, x) = \| \hat{x} - x \|^2
+$$
+For our dataset, we empirically chose the hidden space dimension to match the number of components from PCA (i.e., 20). The architecture and hyperparameters of the AE, including the number of layers and neurons, are summarized in~\autoref{tab:hyperparameter}.
+
+
+
+\begin{figure}[!t]
+   \centering
+   \begin{subfigure}{.32\textwidth}  % Adjust width to fit within the line
+       \centering
+       \includegraphics[width=1.0\linewidth]{./figures/correlation_heatmap.pdf}
+       % \captionsetup{labelformat=empty,skip=-8pt}
+       % \caption{}
+       \vspace{-5pt}
+       \label{fig:heatmap}
+   \end{subfigure}
+   \hfill % Ensures that the subfigures are evenly spaced or fill the space
+   \begin{subfigure}{.32\textwidth}
+       \centering
+       \includegraphics[width=1.0\linewidth]{./figures/autoencoder_training_loss.pdf}
+       % \captionsetup{labelformat=empty,skip=-8pt}
+       % \caption{}
+       \vspace{-5pt}
+       \label{fig:loss}
+   \end{subfigure}
+   \hfill % Use \hfill to add space between subfigures
+   \begin{subfigure}{.32\textwidth}
+       \centering
+       \includegraphics[width=1.0\linewidth]{./figures/elbow_method_deep_kmeans.pdf}
+       % \captionsetup{labelformat=empty,skip=-8pt}
+       % \caption{}
+       \vspace{-5pt}
+       \label{fig:elbow}
+   \end{subfigure}
+   \caption{\textbf{Our propused \textit{Data Selection - Model Training - Application of Clustering Algorithm} Pipeline.} The left figure shows the heatmap of correlations between different data points in the raw data. Middle figure shows the change in the autoencoder loss across training epochs, while the rightmost figure illustrates the process of selecting the optimal parameter K for clustering. And in this problem, we choose K=8.}
+   \vspace{-10pt}
+   \label{fig:pipeline}
+\end{figure}
+
+
+
+\begin{table}[ht]
+   \centering
+   \begin{tabular}{lc}
+   \toprule
+   \textbf{Hyperparameter} & \textbf{Value} \\ \midrule
+   Active Function & ReLU \\
+   Encoding Dimension & 20 \\
+   Number of Layers & 7 \\
+   Batch Size & 128 \\
+   Epochs & 500 \\
+   Learning Rate & 1e-3 \\
+   Loss Function & MSE \\
+   Optimizer & Adam \\
+   Dropout Rate & 0.2 \\
+   \bottomrule
+   \end{tabular}
+   \caption{Autoencoder Architecture and Hyperparameters}
+   \label{tab:hyperparameter}
+\end{table}
+
+
+
+\subsection{Clustering Algorithms}
+After reducing the feature space to approximately 20 dimensions, we applied two clustering methods to identify groups of similar vehicles: K-means and hierarchical clustering.
+
+\subsubsection{K-means Clustering}
+K-means clustering~\citep{macqueen1967kmeans,jain2010kmeans} is a centroid-based clustering algorithm that partitions the dataset into \( K \) clusters, where each data point belongs to the cluster whose centroid is nearest. The objective is to minimize the within-cluster sum of squared errors (SSE):
+$$
+SSE(K) = \sum_{i=1}^{N} \sum_{k=1}^{K} \mathbf{1}(c_i=k) \| x_i - \mu_k \|^2
+$$
+where \( c_i \) is the cluster assignment for data point \( x_i \), \( \mu_k \) is the centroid of cluster \( k \), and \( \mathbf{1}(\cdot) \) is the indicator function. To determine the optimal number of clusters \( K \), we used the elbow method, plotting the SSE as a function of \( K \) and selecting the \( K \) where the rate of decrease in SSE starts to slow,
+as shown in~\figref{fig:pipeline}.
+
+\subsubsection{Hierarchical Clustering}
+Hierarchical clustering~\citep{lance1967hierarchical,murtagh2012hierarchical} builds a tree of clusters by either iteratively merging smaller clusters (agglomerative) or splitting larger clusters (divisive). The agglomerative approach was used for this problem, where at each step, the two clusters that are closest according to a chosen distance metric are merged. The proximity between clusters can be measured using various linkage criteria, such as single linkage, complete linkage, or average linkage. The distance between two clusters \( A \) and \( B \) is given by:
+$$
+d(A, B) = \min_{x \in A, y \in B} \| x - y \|
+$$
+We used a dendrogram to visually inspect the hierarchical relationships between the clusters, as shown in~\autoref{fig:dendrogram}, then we selected the appropriate number of clusters based on the structure of the tree. For this problem, we finally choose 8 clusters (Distance around 10).
+
+
+
+
+\begin{figure}[!t]
+   \centering
+   % \includegraphics[width=1.0\linewidth]{resources/figures/strategy.pdf}
+   \begin{subfigure}{.49\textwidth}  % Adjust width to fit within the line
+       \centering
+       % \framebox[\linewidth][c]{\phantom{\rule{0pt}{0.918\linewidth}}}
+       \includegraphics[width=1.0\linewidth]{./figures/hierarchical_dendrogram.pdf}
+       % \captionsetup{labelformat=empty,skip=-8pt}
+       % \caption{Comparison \SA and \SB.}
+       \vspace{-5pt}
+       \label{fig:dendrogram1}
+   \end{subfigure}
+   \hfill % Ensures that the subfigures are evenly spaced or fill the space
+   \begin{subfigure}{.49\textwidth}
+       \centering
+       % \framebox[\linewidth][c]{\phantom{\rule{0pt}{0.918\linewidth}}}
+       \includegraphics[width=1.0\linewidth]{./figures/hierarchical_dendrogram_deep.pdf}
+       % \captionsetup{labelformat=empty,skip=-8pt}
+       % \caption{Early-stage Training in \SB.}
+       \vspace{-5pt}
+       \label{fig:dendrogram2}
+   \end{subfigure}
+   \caption{\textbf{Dendrogram of the Bottom-Up Hierarchical Clustering Process on the Low-Dimensional Features Generated by \textit{PCA} and \textit{AE}.} From the figure, it is evident that a reasonable choice for the number of clusters is around 10, corresponding to a distance of approximately 10.}
+   \label{fig:dendrogram}
+   \vspace{-12pt}
+\end{figure}
+
+
+\section{Numerical Results}
+\label{sec:numerical}
+
+\subsection{Model Evaluation}
+To evaluate the performance of the clustering algorithms, we used internal validation metrics in~\autoref{tab:evaluation_metric} in~\autoref{sec:app}\footnote{Due to space limitations and for the sake of aesthetic formatting.}.
+The table compares the performance of clustering methods (Kmeans and Hierarchical Clustering, HC) on features extracted using PCA and Autoencoder (AE) across four evaluation metrics: Silhouette Score(SC)~\citep{rousseeuw1987silhouettes}, Calinski-Harabasz Index(CH)~\citep{calinski1974dendrite}, Davies-Bouldin Index(DB)~\citep{davies1979cluster} and Dunn Index(DI)~\citep{dunn1974well}.
+
+
+
+\subsection{Clustering results}
+For the clustering results, see~\autoref{fig:visual}, Tabel~\ref{tab:cluster_PCA_kmeans},\ref{tab:cluster_AE_kmeans},\ref{tab:cluster_PCA_hc} and \ref{tab:cluster_AE_hc} in~\autoref{sec:app}.
+Based on the results of the five tables, we find that \purpletext{for feature extraction, Autoencoder (AE) outperforms Principal Component Analysis (PCA) in terms of clustering quality}. 
+For example, AE combined with hierarchical clustering (HC) yields the best SC (0.3864) and DB (1.0059), suggesting that this method effectively separates data points.
+
+In the clustering methods, K-means slightly outperforms HC when using AE features, achieving a higher CH score. However, HC with PCA features achieves the highest Dunn Index (DI) score (0.3674), suggesting that it can identify well-separated clusters despite its lower SC and CH.
+
+Examining the cluster composition, AE-based features result in a more meaningful distribution of vehicles across clusters, with distinct median prices and a better grouping of VW vehicles. For example, clusters generated with AE features using K-means place most VW vehicles in clusters with moderate median prices (e.g., $9,717.14$ and $10,445$), aligning with VW's market position. In contrast, PCA-based clusters show less consistent grouping, with VW vehicles distributed across multiple clusters without clear price patterns.
+
+Overall, the combination of AE for feature extraction and HC for clustering not only achieves the best clustering evaluation metrics but also results in a logical grouping of vehicles that reflects market segmentation. 
+And we use this result (i.e. \purpletext{AE+HC}) for next sections's analysis.
+
+\begin{figure}[!t]
+    \centering
+    % \includegraphics[width=1.0\linewidth]{resources/figures/strategy.pdf}
+    \begin{subfigure}{.24\textwidth}  % Adjust width to fit within the line
+        \centering
+        % \framebox[\linewidth][c]{\phantom{\rule{0pt}{0.918\linewidth}}}
+        \includegraphics[width=1.0\linewidth]{./figures/PCA_kmeans_tsne_2d.pdf}
+        % \captionsetup{labelformat=empty,skip=-8pt}
+        % \caption{Comparison \SA and \SB.}
+        \vspace{-5pt}
+        \label{fig:visual1}
+    \end{subfigure}
+    \hfill % Ensures that the subfigures are evenly spaced or fill the space
+    \begin{subfigure}{.24\textwidth}
+        \centering
+        % \framebox[\linewidth][c]{\phantom{\rule{0pt}{0.918\linewidth}}}
+        \includegraphics[width=1.0\linewidth]{./figures/AE_kmeans_tsne_2d.pdf}
+        % \captionsetup{labelformat=empty,skip=-8pt}
+        % \caption{Early-stage Training in \SB.}
+        \vspace{-5pt}
+        \label{fig:visual2}
+    \end{subfigure}
+    \hfill % Ensures that the subfigures are evenly spaced or fill the space
+    \begin{subfigure}{.24\textwidth}
+        \centering
+        % \framebox[\linewidth][c]{\phantom{\rule{0pt}{0.918\linewidth}}}
+        \includegraphics[width=1.0\linewidth]{./figures/PCA_hc_tsne_2d.pdf}
+        % \captionsetup{labelformat=empty,skip=-8pt}
+        % \caption{Early-stage Training in \SB.}
+        \vspace{-5pt}
+        \label{fig:visual3}
+    \end{subfigure}
+    \hfill % Ensures that the subfigures are evenly spaced or fill the space
+    \begin{subfigure}{.24\textwidth}
+        \centering
+        % \framebox[\linewidth][c]{\phantom{\rule{0pt}{0.918\linewidth}}}
+        \includegraphics[width=1.0\linewidth]{./figures/AE_hc_tsne_2d.pdf}
+        % \captionsetup{labelformat=empty,skip=-8pt}
+        % \caption{Early-stage Training in \SB.}
+        \vspace{-5pt}
+        \label{fig:visual4}
+    \end{subfigure}
+ 
+    \caption{\textbf{2D Visualization of Features Generated by \textit{Kmeans} and \textit{Hierarchical Clustering} after Dimensionality Reduction Using \textit{PCA} and \textit{AE}.} The clustering results are visually clearer when using \textit{AE} for dimensionality reduction, as samples within the same cluster are more densely packed.}
+    \label{fig:visual}
+    \vspace{-12pt}
+ \end{figure}
+ 
+ 
+
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We selected cars that \bluetext{\textit{belong to the same cluster as Volkswagen vehicles and have prices within 10\% of the average price of Volkswagen vehicles}} as the final competitor models
+and provide the competitors in the .csv files in our \texttt{Supplementary materials}, please refer to \greentext{cars\_within\_10\_percent.csv}.
+And we further analysis the attributes of the cars after clustering, as shown in~\autoref{fig:combined_analysis} in~\autoref{sec:app}.
+
+According to these figures. The competitors of Volkswagen share several characteristics that align with the positioning of affordable and practical urban vehicles. These models typically fall into the sedan or hatchback categories, emphasizing compactness and maneuverability, making them well-suited for city driving.
+Furthermore, these vehicles are generally offered at a lower price point, appealing to cost-sensitive consumers who prioritize economic value over premium features. Their fuel efficiency, reflected in high city and highway mileage, further solidifies their appeal to urban drivers.
+
+However, there are notable differences that set Volkswagen apart from its competitors. Many competing models prioritize lightweight construction, which, while beneficial for fuel efficiency, may compromise perceived safety and structural integrity. In contrast, Volkswagen is often recognized for its robust build and focus on safety, offering a significant edge in terms of quality assurance. 
+Moreover, the competitors’ emphasis on fuel efficiency often results in lower engine power, with many models delivering modest horsepower. Volkswagen, on the other hand, strives to strike a balance between performance and efficiency, catering to drivers who value a more dynamic driving experience.
+Another area of differentiation lies in interior design and comfort. Competitors frequently offer smaller cabin dimensions, which may suffice for short urban commutes but could reduce comfort on longer journeys. 
+
+
+
+
+
+
+
+\bibliography{iclr2025_conference}
+\bibliographystyle{iclr2025_conference}
+
+
+\vspace{4cm}
+\appendix
+\section{Appendix}
+\label{sec:app}
+
+
+% \vspace{-2cm}
+\begin{table}[H]
+    \centering
+    \begin{tabular}{c|c|>{\centering\arraybackslash}p{1.5cm}|>{\centering\arraybackslash}p{1.5cm}|>{\centering\arraybackslash}p{1.5cm}|>{\centering\arraybackslash}p{1.5cm}}
+        \toprule
+        \multirow{2}{*}{\textbf{Feature}} & \multirow{2}{*}{\textbf{Cluster}} & \multicolumn{4}{c}{\textbf{Evaluation Metric}} \\
+        \cmidrule(lr){3-6}
+                                       &                                & \textbf{SC} & \textbf{CH} & \textbf{DB} & \textbf{DI} \\
+        \midrule
+        \multirow{2}{*}{PCA}           & Kmeans                         &        0.2093     &      29.9797       &      1.6294       &     0.2707        \\
+                                       & \cellcolor{gray!20} HC                             & \cellcolor{gray!20} 0.2010 & \cellcolor{gray!20}  28.0231& \cellcolor{gray!20} 1.6160 & \cellcolor{gray!20} \textbf{0.3674 $\uparrow$} \\
+        \midrule
+        \multirow{2}{*}{AE}            & Kmeans                         &       0.3746      &      \textbf{78.2700 $\uparrow$}       &     1.0583        &   0.0867          \\
+                                       &\cellcolor{gray!20} HC                             & \cellcolor{gray!20} \textbf{0.3864 $\uparrow$}  & \cellcolor{gray!20} 75.5768 & \cellcolor{gray!20} \textbf{1.0059 $\downarrow$} & \cellcolor{gray!20} 0.1957 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Clustering Methods and Evaluation Metrics.}% For PCA-based features, Kmeans outperforms HC on SC, CH, and DB metrics, indicating better compactness and separation of clusters. 
+
+    \label{tab:evaluation_metric}
+ \end{table}
+ 
+ \kern -0.5cm 
+
+
+
+ \begin{table}[H]
+    \setlength{\extrarowheight}{2pt} % 减少行间距
+    \centering
+    \begin{tabular}{l|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}}
+        \toprule
+        \textbf{} & \multicolumn{8}{c}{\textbf{K-means Cluster (PCA feature)}} \\
+        \cmidrule(lr){2-9}
+        \textbf{} & \textbf{0} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} \\
+        \midrule
+        \textbf{Number of cars} & 21 & 46 & 35 & 21 & 27 & 25 & 18 & 12 \\
+        \textbf{Median price}   & \cellcolor{gray!20}11541 & \cellcolor{gray!20}8279 & \cellcolor{gray!20}6817 & \cellcolor{gray!20}14670 & \cellcolor{gray!20}22163 & \cellcolor{gray!20}12175 & \cellcolor{gray!20}22326 & \cellcolor{gray!20}20602 \\
+        \textbf{Number of VW}   & 2 & 1 & 0 & 0 & 0 & 8 & 0 & 1 \\
+        \textbf{VW Median}      & \cellcolor{gray!20}10788 & \cellcolor{gray!20}12290 & \cellcolor{gray!20} - & \cellcolor{gray!20}- & \cellcolor{gray!20}- & \cellcolor{gray!20}9153 & \cellcolor{gray!20}- & \cellcolor{gray!20}13845 \\
+        \bottomrule
+    \end{tabular}
+    \caption{K-means clusters using PCA features}
+    \label{tab:cluster_PCA_kmeans}
+\end{table}
+
+\kern -0.5cm 
+
+\begin{table}[H]
+    \setlength{\extrarowheight}{2pt} % 减少行间距
+    \centering
+    \begin{tabular}{l|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}}
+        \toprule
+        \textbf{} & \multicolumn{8}{c}{\textbf{K-means Cluster (AE feature)}} \\
+        \cmidrule(lr){2-9}
+        \textbf{} & \textbf{0} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} \\
+        \midrule
+        \textbf{Number of cars} & 27 & 44 & 17 & 39 & 50 & 14 & 11 & 3 \\
+        \textbf{Median price}   & \cellcolor{gray!20}21624 & \cellcolor{gray!20}15348 & \cellcolor{gray!20}7428 & \cellcolor{gray!20}7862 & \cellcolor{gray!20}9843 & \cellcolor{gray!20}17659 & \cellcolor{gray!20}23079 & \cellcolor{gray!20}12145 \\
+        \textbf{Number of VW}   & 0 & 2 & 0 & 0 & 7 & 3 & 0 & 0 \\
+        \textbf{VW Median}      & \cellcolor{gray!20}- & \cellcolor{gray!20}10788 & \cellcolor{gray!20}- & \cellcolor{gray!20}- & \cellcolor{gray!20}9717 & \cellcolor{gray!20}10445 & \cellcolor{gray!20}- & \cellcolor{gray!20}- \\
+        \bottomrule
+    \end{tabular}
+    \caption{K-means clusters using AE features}
+    \label{tab:cluster_AE_kmeans}
+\end{table}
+
+\kern -0.5cm 
+
+\begin{table}[H]
+    \setlength{\extrarowheight}{2pt} % 减少行间距
+    \centering
+    \begin{tabular}{l|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}}
+        \toprule
+        \textbf{} & \multicolumn{8}{c}{\textbf{Hierarchical Cluster (PCA feature)}} \\
+        \cmidrule(lr){2-9}
+        \textbf{} & \textbf{0} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} \\
+        \midrule
+        \textbf{Number of cars} & 47 & 25 & 21 & 38 & 19 & 20 & 16 & 19 \\
+        \textbf{Median price}   & \cellcolor{gray!20}7004 & \cellcolor{gray!20}15092 & \cellcolor{gray!20}15934 & \cellcolor{gray!20}8816 & \cellcolor{gray!20}13251 & \cellcolor{gray!20}18938 & \cellcolor{gray!20}11608 & \cellcolor{gray!20}27859 \\
+        \textbf{Number of VW}   & 0 & 0 & 4 & 1 & 5 & 0 & 2 & 0 \\
+        \textbf{VW Median}      & \cellcolor{gray!20}- & \cellcolor{gray!20}- & \cellcolor{gray!20}9778 & \cellcolor{gray!20}12290 & \cellcolor{gray!20}9591 & \cellcolor{gray!20}- & \cellcolor{gray!20}10788 & \cellcolor{gray!20}- \\
+        \bottomrule
+    \end{tabular}
+    \caption{Hierarchical clusters using PCA features}
+    \label{tab:cluster_PCA_hc}
+\end{table}
+
+\kern -0.5cm 
+
+\begin{table}[H]
+    \setlength{\extrarowheight}{2pt} % 减少行间距
+    \centering
+    \begin{tabular}{l|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}|>{\centering\arraybackslash}p{1cm}}
+        \toprule
+        \textbf{} & \multicolumn{8}{c}{\textbf{Hierarchical Cluster (AE feature)}} \\
+        \cmidrule(lr){2-9}
+        \textbf{} & \textbf{0} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} \\
+        \midrule
+        \textbf{Number of cars} & 61 & 13 & 52 & 17 & 14 & 28 & 3 & 17 \\
+        \textbf{Median price}   & \cellcolor{gray!20}9081 & \cellcolor{gray!20}19505 & \cellcolor{gray!20}10559 & \cellcolor{gray!20}18530 & \cellcolor{gray!20}20958 & \cellcolor{gray!20}21216 & \cellcolor{gray!20}12145 & \cellcolor{gray!20}7428 \\
+        \textbf{Number of VW}   & 2 & 1 & 9 & 0 & 0 & 0 & 0 & 0 \\
+        \textbf{VW Median}      & \cellcolor{gray!20}10788 & \cellcolor{gray!20}9495 & \cellcolor{gray!20}9984 & \cellcolor{gray!20}- & \cellcolor{gray!20}- & \cellcolor{gray!20}- & \cellcolor{gray!20}- & \cellcolor{gray!20}- \\
+        \bottomrule
+    \end{tabular}
+    \caption{Hierarchical clusters using AE features}
+    \label{tab:cluster_AE_hc}
+\end{table}
+
+
+% \begin{center}
+%     \begin{longtable}{@{}lllr@{}}
+%     % \caption{Dataset overview}
+%     \toprule
+%     \#   & Column             & Non-Null Count & Dtype   \\ \midrule
+%     0    & car\_ID            & 205 non-null   & int64   \\
+%     1    & symboling          & 205 non-null   & int64   \\
+%     2    & CarName            & 205 non-null   & object  \\
+%     3    & fueltype           & 205 non-null   & object  \\
+%     4    & aspiration         & 205 non-null   & object  \\
+%     5    & doornumber         & 205 non-null   & object  \\
+%     6    & carbody            & 205 non-null   & object  \\
+%     7    & drivewheel         & 205 non-null   & object  \\
+%     8    & enginelocation     & 205 non-null   & object  \\
+%     9    & wheelbase          & 205 non-null   & float64 \\
+%     10   & carlength          & 205 non-null   & float64 \\
+%     11   & carwidth           & 205 non-null   & float64 \\
+%     12   & carheight          & 205 non-null   & float64 \\
+%     13   & curbweight         & 205 non-null   & int64   \\
+%     14   & enginetype         & 205 non-null   & object  \\
+%     15   & cylindernumber     & 205 non-null   & object  \\
+%     16   & enginesize         & 205 non-null   & int64   \\
+%     17   & fuelsystem         & 205 non-null   & object  \\
+%     18   & boreratio          & 205 non-null   & float64 \\
+%     19   & stroke             & 205 non-null   & float64 \\
+%     20   & compressionratio   & 205 non-null   & float64 \\
+%     21   & horsepower         & 205 non-null   & int64   \\
+%     22   & peakrpm            & 205 non-null   & int64   \\
+%     23   & citympg            & 205 non-null   & int64   \\
+%     24   & highwaympg         & 205 non-null   & int64   \\
+%     25   & price              & 205 non-null   & float64 \\ \bottomrule
+%     \end{longtable}
+%     \label{tab:data}
+% \end{center}
+    
+
+
+\begin{figure}[htbp]
+    \centering
+    % 第一张图
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{./figures/kmeans_analysis1.png}
+        \caption{Bar chart analysis using kmeans clustering.}
+        \label{fig:kmeans_analysis1}
+    \end{subfigure}
+    \hfill
+    % 第二张图
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{./figures/hc_analysis1.png}
+        \caption{Bar chart analysis using hierarchical clustering.}
+        \label{fig:hc_analysis1}
+    \end{subfigure}
+    % \vspace{1em} % 空隙
+    % 第三张图
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{./figures/kmeans_analysis2.png}
+        \caption{Pie chart analysis using kmeans clustering.}
+        \label{fig:kmeans_analysis2}
+    \end{subfigure}
+    \hfill
+    % 第四张图
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{./figures/hc_analysis2.png}
+        \caption{Pie chart analysis using hierarchical clustering.}
+        \label{fig:hc_analysis2}
+    \end{subfigure}
+    \caption{}
+    \label{fig:combined_analysis}
+\end{figure}
+
+
+\end{document}
